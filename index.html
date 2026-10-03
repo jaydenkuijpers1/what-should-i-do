@@ -1,1 +1,979 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <title>What Should I Do? 🤖</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            min-height: 100vh;
+            background:
+                radial-gradient(circle at top left, #263b72 0%, transparent 35%),
+                radial-gradient(circle at bottom right, #5b2b73 0%, transparent 35%),
+                #080b16;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: min(1100px, 92%);
+            margin: auto;
+            padding: 35px 0 60px;
+        }
+
+        /* HEADER */
+
+        header {
+            text-align: center;
+            padding: 30px 0 45px;
+        }
+
+        .logo {
+            font-size: clamp(42px, 8vw, 82px);
+            font-weight: 900;
+            letter-spacing: -4px;
+            background: linear-gradient(90deg, #7c5cff, #00d9ff, #ff4ecd);
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .subtitle {
+            margin-top: 12px;
+            color: #aeb6d3;
+            font-size: 18px;
+        }
+
+        /* AI STATUS */
+
+        .ai-status {
+            width: fit-content;
+            margin: 0 auto 35px;
+            padding: 10px 18px;
+            border: 1px solid rgba(124, 92, 255, .35);
+            background: rgba(124, 92, 255, .10);
+            border-radius: 999px;
+            color: #bfb5ff;
+            font-size: 14px;
+        }
+
+        .ai-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #6effa8;
+            border-radius: 50%;
+            margin-right: 8px;
+            box-shadow: 0 0 12px #6effa8;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            50% {
+                opacity: .3;
+                transform: scale(.7);
+            }
+        }
+
+        /* CATEGORY */
+
+        .section-title {
+            text-align: center;
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+
+        .categories {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+        }
+
+        .category {
+            border: 1px solid rgba(255,255,255,.09);
+            background: rgba(255,255,255,.055);
+            color: white;
+            border-radius: 20px;
+            padding: 24px 12px;
+            cursor: pointer;
+            transition: .25s;
+            text-align: center;
+            backdrop-filter: blur(12px);
+        }
+
+        .category:hover {
+            transform: translateY(-5px);
+            border-color: #7c5cff;
+            background: rgba(124,92,255,.15);
+        }
+
+        .category.selected {
+            border-color: #00d9ff;
+            background: rgba(0,217,255,.13);
+            box-shadow: 0 0 25px rgba(0,217,255,.12);
+            transform: translateY(-4px);
+        }
+
+        .category-icon {
+            font-size: 35px;
+            margin-bottom: 10px;
+        }
+
+        .category-name {
+            font-weight: bold;
+            font-size: 15px;
+        }
+
+        /* BUTTON */
+
+        .generate-area {
+            text-align: center;
+            margin: 35px 0;
+        }
+
+        .generate-btn {
+            border: none;
+            cursor: pointer;
+            color: white;
+            font-size: 20px;
+            font-weight: 800;
+            padding: 18px 38px;
+            border-radius: 16px;
+            background: linear-gradient(90deg, #7c5cff, #b34cff);
+            box-shadow: 0 12px 35px rgba(124,92,255,.25);
+            transition: .25s;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 16px 45px rgba(124,92,255,.4);
+        }
+
+        .generate-btn:active {
+            transform: scale(.97);
+        }
+
+        /* AI THINKING */
+
+        .thinking {
+            display: none;
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .thinking.active {
+            display: block;
+        }
+
+        .thinking-circle {
+            width: 65px;
+            height: 65px;
+            margin: auto;
+            border-radius: 50%;
+            border: 5px solid rgba(255,255,255,.1);
+            border-top-color: #7c5cff;
+            border-right-color: #00d9ff;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .thinking-text {
+            margin-top: 15px;
+            color: #aeb6d3;
+        }
+
+        /* RESULT */
+
+        .result {
+            display: none;
+            max-width: 750px;
+            margin: 30px auto 0;
+            padding: 32px;
+            border-radius: 28px;
+            background: rgba(255,255,255,.07);
+            border: 1px solid rgba(255,255,255,.12);
+            box-shadow: 0 20px 70px rgba(0,0,0,.25);
+            backdrop-filter: blur(20px);
+            animation: resultIn .5s ease;
+        }
+
+        .result.show {
+            display: block;
+        }
+
+        @keyframes resultIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(.98);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .result-top {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .ai-label {
+            color: #8e7aff;
+            font-weight: bold;
+        }
+
+        .category-label {
+            color: #8d96b5;
+            font-size: 14px;
+        }
+
+        .result h2 {
+            font-size: clamp(28px, 5vw, 43px);
+            line-height: 1.05;
+            margin-bottom: 16px;
+        }
+
+        .description {
+            color: #c3c9dc;
+            line-height: 1.7;
+            font-size: 17px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 25px;
+        }
+
+        .info {
+            padding: 16px;
+            border-radius: 16px;
+            background: rgba(0,0,0,.18);
+            text-align: center;
+        }
+
+        .info strong {
+            display: block;
+            font-size: 19px;
+            margin-bottom: 5px;
+        }
+
+        .info span {
+            color: #9098b4;
+            font-size: 13px;
+        }
+
+        .again {
+            width: 100%;
+            margin-top: 25px;
+            padding: 15px;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,.12);
+            background: rgba(255,255,255,.07);
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: .2s;
+        }
+
+        .again:hover {
+            background: rgba(255,255,255,.12);
+        }
+
+        /* FOOTER */
+
+        footer {
+            text-align: center;
+            color: #646c86;
+            margin-top: 60px;
+            font-size: 13px;
+        }
+
+        /* MOBILE */
+
+        @media (max-width: 750px) {
+            .categories {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .result {
+                padding: 23px;
+            }
+        }
+
+        @media (max-width: 430px) {
+            .categories {
+                grid-template-columns: 1fr 1fr;
+                gap: 9px;
+            }
+
+            .category {
+                padding: 18px 8px;
+            }
+
+            .category-icon {
+                font-size: 29px;
+            }
+
+            .generate-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <header>
+        <div class="logo">WHAT SHOULD I DO?</div>
+        <div class="subtitle">
+            Don't know what to do? Let our AI choose for you.
+        </div>
+    </header>
+
+    <div class="ai-status">
+        <span class="ai-dot"></span>
+        AI Challenge Generator Online
+    </div>
+
+    <h2 class="section-title">Choose a category</h2>
+
+    <div class="categories">
+
+        <button class="category" data-category="Gaming">
+            <div class="category-icon">🎮</div>
+            <div class="category-name">Gaming</div>
+        </button>
+
+        <button class="category" data-category="Active">
+            <div class="category-icon">🏃</div>
+            <div class="category-name">Active</div>
+        </button>
+
+        <button class="category" data-category="Learning">
+            <div class="category-icon">🧠</div>
+            <div class="category-name">Learning</div>
+        </button>
+
+        <button class="category" data-category="Creative">
+            <div class="category-icon">🎨</div>
+            <div class="category-name">Creative</div>
+        </button>
+
+        <button class="category" data-category="Money">
+            <div class="category-icon">💰</div>
+            <div class="category-name">Money</div>
+        </button>
+
+        <button class="category" data-category="Friends">
+            <div class="category-icon">👥</div>
+            <div class="category-name">Friends</div>
+        </button>
+
+        <button class="category" data-category="Home">
+            <div class="category-icon">🏠</div>
+            <div class="category-name">At Home</div>
+        </button>
+
+        <button class="category" data-category="Outside">
+            <div class="category-icon">🌳</div>
+            <div class="category-name">Outside</div>
+        </button>
+
+    </div>
+
+    <div class="generate-area">
+        <button class="generate-btn" id="generateBtn">
+            🤖 ASK AI
+        </button>
+    </div>
+
+    <div class="thinking" id="thinking">
+
+        <div class="thinking-circle"></div>
+
+        <div class="thinking-text" id="thinkingText">
+            AI is thinking...
+        </div>
+
+    </div>
+
+    <div class="result" id="result">
+
+        <div class="result-top">
+
+            <div class="ai-label">
+                🤖 AI RECOMMENDATION
+            </div>
+
+            <div class="category-label" id="resultCategory">
+                Gaming
+            </div>
+
+        </div>
+
+        <h2 id="resultTitle">
+            Challenge
+        </h2>
+
+        <p class="description" id="resultDescription">
+            Description
+        </p>
+
+        <div class="info-grid">
+
+            <div class="info">
+                <strong id="resultTime">10 min</strong>
+                <span>TIME</span>
+            </div>
+
+            <div class="info">
+                <strong id="resultDifficulty">Easy</strong>
+                <span>DIFFICULTY</span>
+            </div>
+
+            <div class="info">
+                <strong id="resultCost">€0</strong>
+                <span>COST</span>
+            </div>
+
+        </div>
+
+        <button class="again" id="againBtn">
+            🔄 GIVE ME ANOTHER
+        </button>
+
+    </div>
+
+    <footer>
+        What Should I Do? — Random ideas powered by fake AI 🤖
+    </footer>
+
+</div>
+
+
+<script>
+
+    /*
+        ==========================================
+        CHALLENGE DATABASE
+        ==========================================
+    */
+
+    const challenges = {
+
+        Gaming: [
+
+            {
+                title: "Try a game you have never played",
+                description: "Choose a game you have never tried before and play it for at least 20 minutes.",
+                time: "20 min",
+                difficulty: "Easy",
+                cost: "€0"
+            },
+
+            {
+                title: "Create your own game challenge",
+                description: "Play your favorite game, but invent one unusual rule that you have to follow.",
+                time: "30 min",
+                difficulty: "Medium",
+                cost: "€0"
+            },
+
+            {
+                title: "Beat your personal record",
+                description: "Pick a game you know well and try to beat one of your own records.",
+                time: "30 min",
+                difficulty: "Medium",
+                cost: "€0"
+            },
+
+            {
+                title: "Random game roulette",
+                description: "Pick a random game from your library and give it a serious chance for 15 minutes.",
+                time: "15 min",
+                difficulty: "Easy",
+                cost: "€0"
+            }
+
+        ],
+
+        Active: [
+
+            {
+                title: "10-minute movement challenge",
+                description: "Put on some music and keep moving for 10 minutes. Make your own movements and have fun.",
+                time: "10 min",
+                difficulty: "Easy",
+                cost: "€0"
+            },
+
+            {
+                title: "Take a walk",
+                description: "Go outside and take a walk around your neighborhood while listening to music or a podcast.",
+                time: "20 min",
+                difficulty: "Easy",
+                cost: "€0"
+            },
+
+            {
+                title: "Mini fitness challenge",
+                description: "Create three simple exercises and do several rounds at your own comfortable pace.",
+                time: "15 min",
+                difficulty: "Medium",
+                cost: "€0"
+            },
+
+            {
+                title: "Explore somewhere nearby",
+                description: "Walk somewhere nearby that you normally never visit and see what you can discover.",
+                time: "30 min",
+                difficulty: "Easy",
+                cost: "€0"
+            }
+
+        ],
+
+        Learning: [
+
+            {
+                title: "Learn something completely random",
+                description: "Choose a subject you know almost nothing about and spend 15 minutes learning its basics.",
+                time: "15 min",
+                difficulty: "Easy",
+                cost: "€0"
+            },
+
+            {
+                title: "Learn 10 new words",
+                description: "Choose a language and learn 10 useful words that you did not know before.",
+                time: "15 min",
+                difficulty: "Easy",
+                cost: "€0"
+            },
+
+            {
+                title: "Watch a science video",
+                description: "Find an interesting science topic and watch a short educational video about it.",
+                time: "20 min",
+                difficulty: "Easy",
+                cost: "€0"
+            },
+
+            {
+                title: "Teach yourself a skill",
+                description: "Pick a small skill and try to learn the basics using a tutorial.",
+                time: "30 min",
+                difficulty: "Medium",
+                cost: "€0"
+            }
+
+        ],
+
+        Creative: [
+
+            {
+                title: "Draw something from memory",
+                description: "Choose an object and try to draw it without looking at a picture of it.",
+                time: "20 min",
+                difficulty: "Medium",
+                cost: "€0"
+            },
+
+            {
+                title: "Create a logo",
+                description: "Invent a fake company and design a logo for it.",
+                time: "30 min",
+                difficulty: "Medium",
+                cost: "€0"
+            },
+
+            {
+                title: "Build something",
+                description: "Use things you already have at home to build something completely new.",
+                time: "30 min",
+                difficulty: "Medium",
+                cost: "€0"
+            },
+
+            {
+                title: "Write a crazy story",
+                description: "Write a short story that starts with the sentence: 'Everything was normal until...'",
+                time: "20 min",
+                difficulty: "Easy",
+                cost: "€0"
+            }
+
+        ],
+
+        Money: [
+
+            {
+                title: "Think of a small business",
+                description: "Come up with a simple business idea and write down what you would sell and who would buy it.",
+                time: "20 min",
+                difficulty: "Easy",
+                cost: "€0"
+            },
+
+            {
+                title: "Make a product idea",
+                description: "Invent a product that solves a small everyday problem.",
+                time: "15 min",
+                difficulty: "Easy",
+                cost: "€0"
+            },
+
+            {
+                title: "Create a mini business plan",
+                description: "Choose a legal, age-appropriate way to earn money and write down the first three steps.",
+                time: "25 min",
+                difficulty: "Medium",
+                cost: "€0"
+            }
+
+        ],
+
+        Friends: [
+
+            {
+                title: "Create a group challenge",
+                description: "Invent a fun challenge that everyone in your group can participate in.",
+                time: "20 min",
+                difficulty: "Easy",
+                cost: "€0"
+            },
+
+            {
+                title: "Play a board game",
+                description: "Choose a board or card game and play a round together.",
+                time: "30 min",
+                difficulty: "Easy",
+                cost: "€0"
+            },
+
+            {
+                title: "Make a quiz",
+                description: "Create a quiz about random facts and see which friend gets the highest score.",
+                time: "25 min",
+                difficulty: "Medium",
+                cost: "€0"
+            },
+
+            {
+                title: "Random photo challenge",
+                description: "Give everyone a funny but harmless photo challenge and compare the results.",
+                time: "20 min",
+                difficulty: "Easy",
+                cost: "€0"
+            }
+
+        ],
+
+        Home: [
+
+            {
+                title: "Rearrange your room",
+                description: "Change one small part of your room to make it feel different.",
+                time: "30 min",
+                difficulty: "Medium",
+                cost: "€0"
+            },
+
+            {
+                title: "Make a snack",
+                description: "Prepare a simple snack using ingredients you already have at home.",
+                time: "15 min",
+                difficulty: "Easy",
+                cost: "€0"
+            },
+
+            {
+                title: "Movie roulette",
+                description: "Choose a movie using a random method instead of spending forever deciding.",
+                time: "5 min",
+                difficulty: "Easy",
+                cost: "€0"
+            },
+
+            {
+                title: "Digital cleanup",
+                description: "Clean up your phone or computer by removing things you no longer need.",
+                time: "20 min",
+                difficulty: "Easy",
+                cost: "€0"
+            }
+
+        ],
+
+        Outside: [
+
+            {
+                title: "Go explore",
+                description: "Take a safe walk somewhere nearby and find three things you have never noticed before.",
+                time: "30 min",
+                difficulty: "Easy",
+                cost: "€0"
+            },
+
+            {
+                title: "Cloud watching",
+                description: "Find a comfortable spot outside and spend some time looking at the sky.",
+                time: "15 min",
+                difficulty: "Easy",
+                cost: "€0"
+            },
+
+            {
+                title: "Nature photo challenge",
+                description: "Take pictures of three interesting things you find outside.",
+                time: "20 min",
+                difficulty: "Easy",
+                cost: "€0"
+            },
+
+            {
+                title: "Find a new route",
+                description: "Take a safe route through your area that you normally do not take.",
+                time: "25 min",
+                difficulty: "Easy",
+                cost: "€0"
+            }
+
+        ]
+
+    };
+
+
+    /*
+        ==========================================
+        VARIABLES
+        ==========================================
+    */
+
+    let selectedCategory = null;
+    let lastChallenge = null;
+
+
+    const categoryButtons =
+        document.querySelectorAll(".category");
+
+    const generateBtn =
+        document.getElementById("generateBtn");
+
+    const againBtn =
+        document.getElementById("againBtn");
+
+    const thinking =
+        document.getElementById("thinking");
+
+    const thinkingText =
+        document.getElementById("thinkingText");
+
+    const result =
+        document.getElementById("result");
+
+
+    /*
+        ==========================================
+        CATEGORY SELECTION
+        ==========================================
+    */
+
+    categoryButtons.forEach(button => {
+
+        button.addEventListener("click", () => {
+
+            categoryButtons.forEach(btn => {
+                btn.classList.remove("selected");
+            });
+
+            button.classList.add("selected");
+
+            selectedCategory =
+                button.dataset.category;
+
+            result.classList.remove("show");
+
+        });
+
+    });
+
+
+    /*
+        ==========================================
+        GENERATE CHALLENGE
+        ==========================================
+    */
+
+    function generateChallenge() {
+
+        if (!selectedCategory) {
+
+            alert("Please choose a category first!");
+
+            return;
+        }
+
+
+        result.classList.remove("show");
+
+        thinking.classList.add("active");
+
+
+        const messages = [
+
+            "AI is thinking...",
+
+            "Analyzing your category...",
+
+            "Searching the challenge database...",
+
+            "Finding something interesting...",
+
+            "Almost ready..."
+
+        ];
+
+
+        let messageIndex = 0;
+
+        thinkingText.textContent =
+            messages[0];
+
+
+        const messageInterval =
+            setInterval(() => {
+
+                messageIndex++;
+
+                if (messageIndex < messages.length) {
+
+                    thinkingText.textContent =
+                        messages[messageIndex];
+
+                }
+
+            }, 500);
+
+
+        setTimeout(() => {
+
+            clearInterval(messageInterval);
+
+            const list =
+                challenges[selectedCategory];
+
+
+            let randomChallenge;
+
+
+            do {
+
+                randomChallenge =
+                    list[Math.floor(Math.random() * list.length)];
+
+            } while (
+                list.length > 1 &&
+                randomChallenge === lastChallenge
+            );
+
+
+            lastChallenge =
+                randomChallenge;
+
+
+            document.getElementById("resultCategory")
+                .textContent =
+                selectedCategory;
+
+
+            document.getElementById("resultTitle")
+                .textContent =
+                randomChallenge.title;
+
+
+            document.getElementById("resultDescription")
+                .textContent =
+                randomChallenge.description;
+
+
+            document.getElementById("resultTime")
+                .textContent =
+                randomChallenge.time;
+
+
+            document.getElementById("resultDifficulty")
+                .textContent =
+                randomChallenge.difficulty;
+
+
+            document.getElementById("resultCost")
+                .textContent =
+                randomChallenge.cost;
+
+
+            thinking.classList.remove("active");
+
+            result.classList.add("show");
+
+
+            result.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
+
+
+        }, 2800);
+
+    }
+
+
+    /*
+        ==========================================
+        BUTTONS
+        ==========================================
+    */
+
+    generateBtn.addEventListener(
+        "click",
+        generateChallenge
+    );
+
+
+    againBtn.addEventListener(
+        "click",
+        generateChallenge
+    );
+
+
+</script>
+
+</body>
+</html>
+```
